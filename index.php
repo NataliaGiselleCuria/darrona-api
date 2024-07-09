@@ -104,6 +104,22 @@ if (isset($_GET['action'])) {
             enviarRespuesta($pedidos);
             break;
 
+        case 'delete-order':
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (isset($data['id_pedido'])) {
+                $orderId = intval($data['id_pedido']);
+                $sql = $con->prepare('DELETE FROM pedidos WHERE id_pedido = :id_pedido');
+                $sql->bindParam(':id_pedido', $orderId, PDO::PARAM_INT);
+                if ($sql->execute()) {
+                    enviarRespuesta(['success' => true]);
+                } else {
+                    enviarRespuesta(['success' => false, 'error' => 'Failed to delete order']);
+                }
+            } else {
+                enviarRespuesta(['status' => 'error', 'message' => 'Datos incompletos']);
+            }
+            break;
+
         case 'update-seen-status':
 
             $data = json_decode(file_get_contents('php://input'), true);
