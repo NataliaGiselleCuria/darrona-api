@@ -41,11 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 function enviarRespuesta($data) {
     global $dominiosPermitidos;
+    
     if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $dominiosPermitidos)) {
         header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
         header("Access-Control-Allow-Credentials: true");
     }
+    
+    header('Content-Type: application/json');
     echo json_encode($data);
+    
+    exit;
 }
 
 if (isset($_GET['action'])) {
@@ -252,15 +257,17 @@ if (isset($_GET['action'])) {
                 } else {
                      enviarRespuesta(['error' => 'Error al guardar el pedido']);
                 }
+
             } else {
                  enviarRespuesta(['error' => 'Datos incompletos']);
             }
+
             break;
 
         case 'ping':
             echo json_encode(['status' => 'ok', 'message' => 'Servidor en funcionamiento']);
             exit;
-            
+
             break;
 
         default:
