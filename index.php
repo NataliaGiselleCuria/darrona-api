@@ -5,52 +5,48 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 require_once 'database.php';
+require 'vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 $db = new DataBase();
 $con = $db->conectar();
 
-$dominiosPermitidos = [
-    "https://localhost:5173"
-];
+// Definir los dominios permitidos para CORS
+$dominiosPermitidos = ["http://localhost:3000", "https://darrona-pedidos.free.nf/"];
 
-// if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $dominiosPermitidos)) {
-//     header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-// }
+if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $dominiosPermitidos)) {
+    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+    header("Access-Control-Allow-Credentials: true");
+}
 
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Access-Control-Allow-Methods: OPTIONS, GET, POST, PUT, DELETE");
-header("Access-Control-Allow-Credentials: true");
 header('Content-Type: application/json');
 
+// Manejar solicitudes OPTIONS (preflight)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Origin: *');
+    if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $dominiosPermitidos)) {
+        header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+        header("Access-Control-Allow-Credentials: true");
+    }
     header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, PATCH, OPTIONS');
     header('Access-Control-Allow-Headers: token, Content-Type');
     header('Access-Control-Max-Age: 1728000');
     header('Content-Length: 0');
     header('Content-Type: text/plain');
     die();
-    }
-
-header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
-
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-require 'vendor/autoload.php';
+}
 
 function enviarRespuesta($data) {
     global $dominiosPermitidos;
     if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $dominiosPermitidos)) {
         header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+        header("Access-Control-Allow-Credentials: true");
     }
-    header('Content-Type: application/json');
     echo json_encode($data);
-    exit;
 }
-
 
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
@@ -142,7 +138,7 @@ if (isset($_GET['action'])) {
 
         case 'save-order':
             $data = json_decode(file_get_contents("php://input"), true);
-
+           
             if (isset($data['nombre_cliente'], $data['email_cliente'], $data['telefono_cliente'], $data['direccion_cliente'], $data['fecha_pedido'], $data['detalle'], $data['total_pedido'], $data['visto'], $data['tipo_comprador'], $data['email'], $data['telefono'])) {
                 $nombre_cliente = $data['nombre_cliente'];
                 $email_cliente = $data['email_cliente'];
@@ -159,8 +155,10 @@ if (isset($_GET['action'])) {
                 $sql = $con->prepare("INSERT INTO pedidos (nombre_cliente, email_cliente, telefono_cliente, direccion_cliente, fecha_pedido, detalle, total, visto, tipo_comprador) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $sql->execute([$nombre_cliente, $email_cliente, $telefono_cliente, $direccion_cliente, $fecha_pedido, $detalle, $total_pedido, $visto, $comprador]);
 
+                
                 if ($sql->rowCount() > 0) {
                     try {
+                        //Email Darrona
                         $mail = new PHPMailer(true);
 
                         // Configuración del servidor
@@ -173,6 +171,7 @@ if (isset($_GET['action'])) {
                         $mail->Port = 587;
 
                         $mail->setFrom('pedidodarrona@gmail.com', 'Diatribuidora Darrona');
+                        // $mail->addAddress('ad.darrona@gmail.com');
                         $mail->addAddress('nataliagiselle.c@gmail.com');
 
                         // Contenido
@@ -184,29 +183,26 @@ if (isset($_GET['action'])) {
                             $product = $item['product'];
                             $detalleHTML .= '<li>' . htmlspecialchars($product['Producto']) . ' - Cantidad: ' . htmlspecialchars($item['quantity']) . ' - Total: $' . number_format($item['totalProduct'], 2, ',', '.') . '</li>';
                         }
-                        $mail->Body = '
-                            <html>
-                            <body>
-                                <h2>Nuevo pedido de compra</h2>
-                                <p>Hola Darrona,</p>
-                                <p>Acabas de recibir un nuevo pedido de compra de:</p>
-                                <ul>
-                                    <li><strong>Nombre:</strong> ' . htmlspecialchars($nombre_cliente) . '</li>
-                                    <li><strong>Email:</strong> ' . htmlspecialchars($email_cliente) . '</li>
-                                    <li><strong>Teléfono:</strong> ' . htmlspecialchars($telefono_cliente) . '</li>
-                                    <li><strong>Dirección:</strong> ' . htmlspecialchars($direccion_cliente) . '</li>
-                                    <li><strong>Fecha del pedido:</strong> ' . htmlspecialchars($fecha_pedido) . '</li>
-                                    <li><strong>Total del pedido:</strong> $' . number_format($total_pedido, 2, ',', '.') . '</li>
-                                </ul>
-                                <h3>Detalle del pedido:</h3>
-                                <ul>' . $detalleHTML . '</ul>
-                                <p>Saludos,<br>Tu tienda en línea</p>
-                            </body>
-                            </html>';
+
+                        // Load HTML template for Darrona
+                        $htmlDarrona = file_get_contents('darrona-email.html');
+
+                        // Replace placeholders for Darrona
+                        $htmlDarrona = str_replace('{{nombre_cliente}}', htmlspecialchars($nombre_cliente), $htmlDarrona);
+                        $htmlDarrona = str_replace('{{email_cliente}}', htmlspecialchars($email_cliente), $htmlDarrona);
+                        $htmlDarrona = str_replace('{{telefono_cliente}}', htmlspecialchars($telefono_cliente), $htmlDarrona);
+                        $htmlDarrona = str_replace('{{direccion_cliente}}', htmlspecialchars($direccion_cliente), $htmlDarrona);
+                        $htmlDarrona = str_replace('{{fecha_pedido}}', htmlspecialchars($fecha_pedido), $htmlDarrona);
+                        $htmlDarrona = str_replace('{{total_pedido}}', number_format($total_pedido, 2, ',', '.'), $htmlDarrona);
+                        $htmlDarrona = str_replace('{{detalle_pedido}}', $detalleHTML, $htmlDarrona);
+
+                        $mail->Body = $htmlDarrona;
                         $mail->AltBody = 'Hola Darrona,\n\nAcabas de recibir un nuevo pedido de compra de: ' . htmlspecialchars($nombre_cliente) . '.\n\nSaludos,\nTu tienda en línea';
 
                         $mail->send();
 
+                        //Email Cliente
+                         // Configuración del servidor
                         $mailCliente = new PHPMailer(true);
                         $mailCliente->isSMTP();
                         $mailCliente->Host = 'smtp.gmail.com';
@@ -228,91 +224,49 @@ if (isset($_GET['action'])) {
                             $detalleHTMLcliente .= '<li>' . htmlspecialchars($product['Producto']) . ' - Cantidad: ' . htmlspecialchars($item['quantity']) . ' - Total: $' . number_format($item['totalProduct'], 2, ',', '.') . '</li>';
                         }
 
-                        $mailCliente->Body = '
-                            <html>
-                            <body>
-                                <h2>Confirmación de tu pedido</h2>
-                                <p>Hola ' . htmlspecialchars($nombre_cliente) . ',</p>
-                                <p>Hemos recibido tu pedido y estamos procesándolo. Pronto nos comunicaremos para concreatar el pago y la entrega.\n Aquí tienes los detalles de tu pedido:</p>
-                                <ul>
-                                    <li><strong>Fecha del pedido:</strong> ' . htmlspecialchars($fecha_pedido) . '</li>
-                                    <li><strong>Total del pedido:</strong> $' . number_format($total_pedido, 2, ',', '.') . '</li>
-                                </ul>
-                                <h3>Detalle del pedido:</h3>
-                                <ul>' . $detalleHTMLcliente . '</ul>
-                                <p><strong>No responder este email</strong></p>
-                                <p><strong>Para comunicarte con nosotros hacerlo via mensaje Whatsapp al ' . htmlspecialchars($telefono) . '.</strong></p>
-                                <p>Gracias por elegirnos.<p>
-                                <p>Saludos,<br>Distrinuidora Darrona</p>
-                            </body>
-                            </html>';
+                        // Load HTML template
+                        $htmlCliente = file_get_contents('client-email.html');
+
+                         // Replace placeholders for Cliente
+                        $htmlCliente = str_replace('{{nombre_cliente}}', htmlspecialchars($nombre_cliente), $htmlCliente);
+                        $htmlCliente = str_replace('{{email_cliente}}', htmlspecialchars($email_cliente), $htmlCliente);
+                        $htmlCliente = str_replace('{{telefono_cliente}}', htmlspecialchars($telefono_cliente), $htmlCliente);
+                        $htmlCliente = str_replace('{{direccion_cliente}}', htmlspecialchars($direccion_cliente), $htmlCliente);
+                        $htmlCliente = str_replace('{{total_pedido}}', number_format($total_pedido, 2, ',', '.'), $htmlCliente);
+                        $htmlCliente = str_replace('{{detalle_pedido}}', $detalleHTML, $htmlCliente);
+                        $htmlCliente = str_replace('{{telefono}}', htmlspecialchars($telefono), $htmlCliente);
+
+                        // Content
+                        $mailCliente->isHTML(true);
+                        $mailCliente->CharSet = 'UTF-8';
+                        $mailCliente->Subject = 'Confirmación de Pedido';
+                        $mailCliente->Body = $htmlCliente;
                         $mailCliente->AltBody = 'Hola ' . htmlspecialchars($nombre_cliente) . ',\n\nGracias por tu compra. Hemos recibido tu pedido y estamos procesándolo. Aquí tienes los detalles de tu pedido:\n\nNombre: ' . htmlspecialchars($nombre_cliente) . '\nEmail: ' . htmlspecialchars($email_cliente) . '\nTeléfono: ' . htmlspecialchars($telefono_cliente) . '\nDirección: ' . htmlspecialchars($direccion_cliente) . '\nFecha del pedido: ' . htmlspecialchars($fecha_pedido) . '\nTotal del pedido: $' . number_format($total_pedido, 2, ',', '.') . '\n\nSaludos,\nTu tienda en línea';
 
                         $mailCliente->send();
 
-                        echo enviarRespuesta(['success' => 'Pedido guardado y correo enviado exitosamente']);
+                         enviarRespuesta(['success' => 'Pedido guardado y correo enviado exitosamente']);
                     } catch (Exception $e) {
-                        echo enviarRespuesta(['error' => "El correo no pudo ser enviado. Error de PHPMailer: {$mail->ErrorInfo}"]);
+                         enviarRespuesta(['error' => "El correo no pudo ser enviado. Error de PHPMailer: {$mail->ErrorInfo}"]);
                     }
                 } else {
-                    echo enviarRespuesta(['error' => 'Error al guardar el pedido']);
+                     enviarRespuesta(['error' => 'Error al guardar el pedido']);
                 }
             } else {
-                echo enviarRespuesta(['error' => 'Datos incompletos']);
+                 enviarRespuesta(['error' => 'Datos incompletos']);
             }
             break;
 
-        case 'recover-cred':
-            $data = json_decode(file_get_contents("php://input"), true);
-
-            if (isset($data['us'], $data['pass'])) {
-                $us = $data['us'];
-                $pass = $data['pass'];
-
-                try {
-                    $mail = new PHPMailer(true);
-
-                    // Configuración del servidor
-                    $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'pedidodarrona@gmail.com';
-                    $mail->Password = 'kjqpdlybcfuvglhk';
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = 587;
-
-                    $mail->setFrom('pedidodarrona@gmail.com', 'Diatribuidora Darrona');
-                    $mail->addAddress('nataliagiselle.c@gmail.com');
-
-                    // Contenido
-                    $mail->isHTML(true);
-                    $mail->Subject = 'Recuperacion de Usuario';
-                    $mail->Body = '
-                        <html>
-                        <body>
-                            <h2>Recuperación de usuario</h2>
-                            <p>Hola Darrona,</p>
-                            <p>Estas son tus credenciales:</p>
-                            <ul>
-                                <li><strong>Usuario:</strong> ' . htmlspecialchars($us) . '</li>
-                                <li><strong>Clave:</strong> ' . htmlspecialchars($pass) . '</li>
-                            </ul>
-                            <p>Saludos,<br>Tu tienda en línea</p>
-                        </body>
-                        </html>';
-                    $mail->AltBody = 'Hola Darrona,\n\nEstas son tus credenciales: Usuario:' . htmlspecialchars($us) .'clave:' . htmlspecialchars($us) . '.\n\nSaludos,\nTu tienda en línea';
-
-                    $mail->send();
-                } catch (Exception $e) {
-                    echo enviarRespuesta(['error' => "El correo no pudo ser enviado. Error de PHPMailer: {$mail->ErrorInfo}"]);
-                }
-            }
+        case 'ping':
+            echo json_encode(['status' => 'ok', 'message' => 'Servidor en funcionamiento']);
+            exit;
+            
             break;
 
         default:
-            echo enviarRespuesta(['error' => 'acción no válida']);
+             enviarRespuesta(['error' => 'acción no válida']);
             break;
     }
 } else {
-    echo enviarRespuesta(['error' => 'acción no válida']);
+     enviarRespuesta(['error' => 'acción no válida']);
 }

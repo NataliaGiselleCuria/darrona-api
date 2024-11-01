@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Quicksand:wght@300..700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            padding-bottom: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 20px auto;
+            box-shadow: 3px 3px 10px #36372f36;
+        }
+
+        h1 {
+            color: #5d5749;
+            font-size: x-large;
+        }
+
+        h3 {
+            color: #4d5c51;
+        }
+
+        strong {
+            color: #584942;
+        }
+
+        p,
+        li {
+            color: black;
+        }
+
+        .datos li {
+            list-style: none;
+        }
+
+        .header {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            padding: 2% 7%;
+        }
+
+        .header img {
+            width: 90%;
+            margin-top: 10px;
+        }
+
+        .content {
+            font-family: 'Poppins', sans-serif;
+            padding: 0 5%;
+        }
+
+        .footer {
+            margin-top: 100px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://darrona-pedidos.free.nf/Darrona-pedido.png" alt="Company Logo">
+        </div>
+        <div class="content">
+            <p>Hola Darrona,</p>
+            <p>Acabas de recibir un nuevo pedido de compra de:</p>
+            <ul class="datos">
+                <li><strong>Nombre:</strong> {{nombre_cliente}}</li>
+                <li><strong>Email:</strong> {{email_cliente}}</li>
+                <li><strong>Teléfono:</strong> {{telefono_cliente}}</li>
+                <li><strong>Dirección:</strong> {{direccion_cliente}}</li>
+                <li><strong>Fecha del pedido:</strong> {{fecha_pedido}}</li>
+                <li><strong>Total del pedido:</strong> $ {{total_pedido}}</li>
+            </ul>
+            <h3>Detalle del Pedido:</h3>
+            <ul>
+                {{detalle_pedido}}
+            </ul>
+            <p>Puedes descargar este pedido ingresando a <strong>https://darrona-pedidos.free.nf/login</strong></p>
+            <p>Saludos,<br>Tu tienda en línea</p>
+            <div class="footer">
+                <p>&copy; 2024 Distribuidora Darrona. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

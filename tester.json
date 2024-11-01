@@ -1,0 +1,46 @@
+[
+    {
+        "detalle": [
+            {
+                "product": {
+                    "Código": "SLTAP1",
+                    "Producto": "Arveja partida x 1 kg",
+                    "Categoría": "SALVE LA TIERRA",
+                    "Presentación": "KG",
+                    "Cantidad x pres.": "1",
+                    "Peso": "1,00",
+                    "minorista precio x presentación": "$3.324,75",
+                    "mayorista precio x presentación": "$2.770,63",
+                    "distribuidor precio x presentación": "$2.216,50"
+                },
+                "quantity": 3,
+                "totalProduct": 8311.89
+            },
+            {
+                "product": {
+                    "Código": "SLTAP25",
+                    "Producto": "Arveja partida x 25 kg",
+                    "Categoría": "SALVE LA TIERRA",
+                    "Presentación": "BOLSÓN",
+                    "Cantidad x pres.": "25",
+                    "Peso": "25,00",
+                    "minorista precio x presentación": "$74.167,50",
+                    "mayorista precio x presentación": "$61.806,25",
+                    "distribuidor precio x presentación": "$49.445,00"
+                },
+                "quantity": 4,
+                "totalProduct": 247225
+            }
+        ],
+        "direccion_cliente": "Saavedra 4179",
+        "email": "ad.darrona@gmail.com",
+        "email_cliente": "nataliagiselle.c@gmail.com",
+        "fecha_pedido": "2024-10-23",
+        "nombre_cliente": "natalia",
+        "telefono": "+54 9 2214 97-0274",
+        "telefono_cliente": "01155722648",
+        "tipo_comprador": "mayorista",
+        "total_pedido": 255536.89,
+        "visto": false
+    }
+]

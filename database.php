@@ -1,17 +1,17 @@
 <?php
-    class DataBase{   
+    class DataBase{
 
-        private $hostname = "sql311.infinityfree.com";
-        private $database = "if0_36829084_darrona";
-        private $username = "if0_36829084";
-        private $password = "QjeYaAMQUy";
-        private $charset = "utf8";
-
-        // private $hostname = "localhost";
-        // private $database = "darrona";
-        // private $username = "root";
-        // private $password = "";
+        // private $hostname = "sql311.infinityfree.com";
+        // private $database = "if0_36829084_darrona";
+        // private $username = "if0_36829084";
+        // private $password = "QjeYaAMQUy";
         // private $charset = "utf8";
+
+        private $hostname = "localhost";
+        private $database = "darrona";
+        private $username = "root";
+        private $password = "";
+        private $charset = "utf8";
 
         function conectar(){
 
